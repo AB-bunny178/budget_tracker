@@ -1,0 +1,268 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #74ebd5, #acb6e5);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        input:focus {
+            border-color: #74ebd5;
+            box-shadow: 0 0 5px rgba(116, 235, 213, 0.3);
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            color: #fff;
+            background: #74ebd5;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.1s ease;
+        }
+
+        button:hover {
+            background: #acb6e5;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 20px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        #expensesList {
+            margin-top: 20px;
+            text-align: left;
+            display: inline-block;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        #expensesList h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #expensesList ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #expensesList li {
+            padding: 8px 0;
+            font-size: 16px;
+            color: #555;
+            border-bottom: 1px solid #eee;
+        }
+
+        #expensesList li:last-child {
+            border-bottom: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 500px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .input-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            input, button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Personal Budget Tracker</h1>
+        <div class="input-group">
+            <input type="text" id="category" placeholder="Enter category (e.g., food)">
+            <input type="number" id="amount" placeholder="Enter amount (e.g., 10.50)" step="0.01">
+        </div>
+        <div class="input-group">
+            <button id="addButton">Add Expense</button>
+            <button id="viewExpensesButton">View All Expenses</button>
+        </div>
+        <div id="result"></div>
+        <div id="expensesList"></div>
+    </div>
+
+    <script>
+        // Store result to persist
+        let lastResult = "";
+
+        // Button event
+        document.getElementById("addButton").addEventListener("click", async function(event) {
+            event.preventDefault(); // Stop any refresh
+            console.log("Button clicked - Starting process");
+
+            const category = document.getElementById("category").value;
+            const amount = document.getElementById("amount").value;
+
+            if (!category || !amount) {
+                console.log("Validation failed: Missing fields");
+                lastResult = "Please fill in both fields!";
+                document.getElementById("result").innerText = lastResult;
+                return;
+            }
+
+            console.log("Inputs valid:", { category, amount });
+            lastResult = "Processing...";
+            document.getElementById("result").innerText = lastResult;
+
+            try {
+                console.log("Sending fetch request...");
+                const response = await fetch("http://localhost:5000/track", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ category: category, amount: amount })
+                });
+                const data = await response.json();
+                console.log("Fetch response:", data);
+
+                lastResult = `Total spent on ${category}: $${data.total_spent.toFixed(2)}`;
+                document.getElementById("result").innerText = lastResult;
+                console.log("Result set:", lastResult);
+            } catch (error) {
+                console.error("Fetch error:", error);
+                lastResult = "Error connecting to server!";
+                document.getElementById("result").innerText = lastResult;
+            }
+        });
+
+        // View All Expenses button event
+        document.getElementById("viewExpensesButton").addEventListener("click", async function(event) {
+            event.preventDefault();
+            console.log("View All Expenses clicked");
+
+            try {
+                const response = await fetch("http://localhost:5000/get_expenses", {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" }
+                });
+                const data = await response.json();
+                console.log("Expenses fetched:", data);
+
+                const expensesList = document.getElementById("expensesList");
+                if (data.expenses.length === 0) {
+                    expensesList.innerHTML = "<p>No expenses found.</p>";
+                } else {
+                    const ul = document.createElement("ul");
+                    data.expenses.forEach(expense => {
+                        const li = document.createElement("li");
+                        li.textContent = `${expense.category}: $${expense.amount.toFixed(2)}`;
+                        ul.appendChild(li);
+                    });
+                    expensesList.innerHTML = "<h3>All Expenses:</h3>";
+                    expensesList.appendChild(ul);
+                }
+            } catch (error) {
+                console.error("Error fetching expenses:", error);
+                document.getElementById("expensesList").innerText = "Error fetching expenses!";
+            }
+        });
+
+        // Catch page refresh
+        window.onbeforeunload = function() {
+            console.log("WARNING: Page is about to reload!");
+            return "Leaving page?";
+        };
+
+        // No default "Ready" text
+        window.onload = function() {
+            if (lastResult) {
+                document.getElementById("result").innerText = lastResult;
+            }
+        };
+    </script>
+</body>
+</html>
